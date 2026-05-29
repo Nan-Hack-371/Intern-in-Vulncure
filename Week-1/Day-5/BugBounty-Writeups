@@ -1,0 +1,153 @@
+# Bug Bounty Writeup-Email Verification Bypass Vulnerability
+
+## Introduction
+
+Email verification is used in web applications to confirm that a user really owns the email address used during registration.
+
+In this vulnerability, the application incorrectly verified the old email address even after the user changed the account email during signup.
+
+Because of this flaw, an attacker could create an account using another person’s email address without having access to that email inbox.
+
+---
+
+# What Gets Affected?
+
+This vulnerability affects:
+
+- User registration system
+- Email verification process
+- Account identity validation
+- Authentication trust
+
+It can impact:
+
+- User accounts
+- Business workflows
+- Admin approval systems
+- Email-based security checks
+
+---
+
+# Affected Component
+
+## Email Verification System
+
+The email verification system is responsible for:
+
+- sending verification links
+- validating email ownership
+- activating user accounts securely
+
+In this case:
+
+- the verification token was not updated after email change
+- old verification links still remained valid
+
+This caused the application to trust the wrong email address.
+
+---
+
+# How It Was Exploited
+
+## Step 1 — Register with Attacker Email
+
+The attacker registers using:
+
+```
+attacker@example.com
+```
+
+The application sends a verification link to the attacker inbox.
+
+---
+
+## Step 2 — Change Email Address
+
+Before verifying, the attacker changes the email to:
+
+```
+victim@example.com
+```
+
+---
+
+## Step 3 — Old Verification Link Still Works
+
+The application does not:
+
+- invalidate the old token
+- generate a new verification link
+
+The attacker still has access to the original verification email.
+
+---
+
+## Step 4 — Verify Using Old Email
+
+The attacker clicks the old verification link received in:
+
+```
+attacker@example.com
+```
+
+The application accepts the verification.
+
+---
+
+## Final Result
+
+The account becomes registered as:
+
+```
+victim@example.com
+```
+
+even though the victim never verified the email.
+
+---
+
+# Impact
+
+An attacker could:
+
+- Create accounts using emails they do not own
+- Impersonate other users
+- Abuse company email registrations
+- Block legitimate users from signing up
+- Break trust in the authentication system
+
+---
+
+# Root Cause
+
+| Issue | Explanation |
+| --- | --- |
+| Old token not invalidated | Previous verification link still active |
+| No new verification token | New email never properly verified |
+| Weak backend validation | Application trusted old verification state |
+| Improper session handling | Email and verification became mismatched |
+
+---
+
+# Mitigation
+
+To fix this vulnerability:
+
+- Invalidate old verification tokens after email changes
+- Generate a completely new verification link
+- Send verification only to the updated email address
+- Prevent account creation until new email is verified
+- Revalidate email ownership whenever email is modified
+
+---
+
+# Security Lesson
+
+Applications should always bind verification tokens to the current email address.
+
+Any email change during registration must:
+
+- invalidate previous verification sessions
+- restart the verification process securely
+
+Otherwise attackers may bypass email ownership validation.
