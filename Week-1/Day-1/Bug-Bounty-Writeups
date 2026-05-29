@@ -1,0 +1,179 @@
+
+Attack Chain Explanation – Forum Points Manipulation & Account Lockout
+
+This writeup is mainly about a Business Logic Vulnerability that led to points manipulation, leaderboard abuse, and finally account denial/lockout.
+
+You can explain the attack chain step-by-step like this:
+
+1. Recon & User Testing
+
+The researcher explored the forum functionality manually.
+
+He identified:
+
+The forum had a ranking/points system
+Users gained points for:
+Liking posts
+Solving issues
+Sending badges
+Forum activities
+
+This phase is called:
+
+Reconnaissance / Application Mapping
+
+2. Initial Vulnerability Discovery – Point Farming
+
+The attacker noticed:
+
+Liking a post gave +5 points
+When unliking the post:
+The like count decreased
+BUT the points were not removed
+
+So the backend logic was flawed.
+
+Vulnerability:
+
+Improper business logic validation
+
+Impact:
+Infinite point generation
+Leaderboard manipulation
+3. Automation of the Attack
+
+The attacker tried automating the like/unlike requests using:
+
+Burp Suite Intruder
+Macros
+Repeated requests
+Attack Flow:
+Send Like request
+Send Unlike request
+Refresh profile page
+Repeat automatically
+
+Because the server kept awarding points every cycle:
+
+Points increased continuously
+No rate limiting existed
+No duplicate action prevention existed
+4. Expanding the Attack Surface – Notification Abuse
+
+During testing, the attacker found:
+
+Any user’s notifications could be viewed publicly
+
+Initially, this looked like:
+
+Broken Access Control (BAC)
+
+But documentation showed this behavior was “intended.”
+
+However:
+
+Other users’ notifications still contained interactable actions
+Those actions could also be liked/unliked
+Result:
+
+The attacker could farm even more points using:
+
+Other users’ notifications
+Badge notifications
+5. Badge Abuse for Higher Rewards
+
+The attacker discovered:
+
+Badge notifications gave even more points
+Each like/unlike cycle on badge activity generated around 30 points
+Why this mattered:
+
+The attacker found a higher-value object in the application.
+
+This is:
+
+Abuse of application reward mechanics
+
+6. Full Exploitation Using Burp Macros
+
+The attacker chained multiple requests together.
+
+Requests Used:
+Request	Purpose
+Like request	Add points
+Unlike request	Reset state
+Profile/page request	Trigger refresh/update
+
+Using Burp macros:
+
+Requests executed repeatedly
+Continuous point farming occurred automatically
+7. Secondary Impact – Victim Account Lockout
+
+After massive abuse:
+
+Accounts started getting blocked
+Victims saw a black screen / 400 Bad Request
+
+The attacker realized:
+
+They could intentionally trigger this on other users
+
+Final Impact:
+Permanent leaderboard manipulation
+Account denial/lockout
+Potential forum-wide abuse
+
+This escalated the issue from:
+
+“Informational”
+
+to potentially:
+
+Denial of Service (DoS) against user accounts
+
+Root Cause Analysis
+
+The application failed in several areas:
+
+Weakness	Explanation
+Business Logic Flaw	Points added repeatedly without validation
+Missing State Validation	Unlike action didn’t reverse rewards
+No Rate Limiting	Unlimited automated requests allowed
+Poor Authorization Design	Public notification interactions exploitable
+Lack of Abuse Detection	No anti-automation protection
+Broken Reward System	Same action rewarded infinitely
+Vulnerability Types Involved
+
+You can mention these in your internship explanation:
+
+Business Logic Vulnerability
+Improper Authorization Design
+Race Condition/Replay-style Abuse
+Insufficient Rate Limiting
+Denial of Service (Account Lockout)
+Abuse of Gamification System
+Simple Attack Chain Summary
+
+You can explain it shortly like this:
+
+Researcher tested forum features.
+Found that liking posts gave points.
+Unliking removed likes but not points.
+Automated like/unlike requests using Burp Suite.
+Discovered public notification interactions.
+Abused badge notifications for higher point rewards.
+Repeated requests massively increased points.
+Excessive abuse corrupted victim account state.
+Victims became locked out of the forum.
+Real-World Security Lesson
+
+This writeup shows that:
+
+Even small logic flaws in reward systems can become serious security issues when chained together.
+
+The issue was dangerous because it affected:
+
+Integrity (fake leaderboard rankings)
+Availability (users locked out)
+Trust in the platform
