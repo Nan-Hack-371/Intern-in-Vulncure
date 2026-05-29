@@ -1,0 +1,152 @@
+# Bug Bounty Writeup
+
+NASA Slack Workspace Exposure via Google Dorking
+
+## What Happened?
+
+A security researcher was performing Google Dorking on NASA domains using this query:
+
+```
+site:"*.nasa.gov" "slack"
+```
+
+This search returned a public PDF document hosted on a NASA website.
+
+Inside the PDF, there was a direct invitation link to NASA’s internal Slack workspace.
+
+The researcher clicked the invite link and discovered that anyone could join the workspace using any Gmail account.
+
+---
+
+# What is Google Dorking?
+
+Google Dorking is a technique that uses advanced Google search operators to find publicly exposed information.
+
+Example:
+
+```
+site:"*.nasa.gov" "slack"
+```
+
+This searches:
+
+- only NASA subdomains
+- pages containing the word "slack"
+
+---
+
+# What is Slack?
+
+Slack is an internal communication platform used by organizations for:
+
+- messaging
+- file sharing
+- project discussions
+- collaboration
+
+It is similar to:
+
+- Discord
+- Microsoft Teams
+- Workplace chat systems
+
+---
+
+# How the Vulnerability Happened
+
+## Step 1 — Internal Slack Invite Link Created
+
+NASA had a Slack invite link for workspace access.
+
+Example:
+
+```
+<https://workspace.slack.com/join/xyz>
+```
+
+Normally this link should remain private.
+
+---
+
+## Step 2 — Link Added to Public PDF
+
+The Slack invite link was accidentally included inside a PDF document.
+
+The PDF was uploaded publicly to a NASA website.
+
+---
+
+## Step 3 — Google Indexed the PDF
+
+Because the PDF was public:
+
+- Google crawled it
+- indexed its contents
+- made it searchable
+
+---
+
+## Step 4 — Researcher Found the Link
+
+Using Google Dorking, the researcher discovered the PDF and the exposed Slack invitation link.
+
+---
+
+## Step 5 — Unauthorized Access
+
+The Slack workspace allowed registration using any Gmail account.
+
+No strict email verification such as:
+
+```
+@nasa.gov
+```
+
+was enforced.
+
+As a result:
+
+- external users could join the internal workspace
+
+---
+
+# Vulnerability Type
+
+## Main Vulnerability
+
+- Sensitive Information Exposure
+
+## Related Issues
+
+- Information Disclosure
+- Misconfigured Access Control
+- Improper Access Restrictions
+
+---
+
+# Root Cause
+
+| Issue | Explanation |
+| --- | --- |
+| Public PDF Exposure | Slack invite link accessible publicly |
+| Google Indexing | Search engine indexed the document |
+| Weak Join Restrictions | Any Gmail account could join |
+| Lack of Access Validation | No employee-only verification |
+
+---
+
+# Impact
+
+An attacker could potentially access:
+
+- internal discussions
+- confidential information
+- shared documents
+- employee communications
+- operational data
+
+---
+
+# Key Security Lesson
+
+Even a simple publicly exposed document can become an entry point into internal systems if proper access restrictions are not implemented.
