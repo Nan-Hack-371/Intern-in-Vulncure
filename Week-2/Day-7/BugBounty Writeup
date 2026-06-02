@@ -1,0 +1,239 @@
+# 📌 Vulnerability Report: URI-Based Cross-Site Scripting (XSS)
+
+---
+
+# 🎯 Objective
+
+Identify and validate security vulnerabilities within the target application's subdomains through reconnaissance and parameter testing.
+
+---
+
+# 📖 Description
+
+During security testing of a private bug bounty program, a potentially vulnerable redirect endpoint was discovered through Google Dorking. The endpoint accepted user-controlled input through a `redirect` parameter.
+
+Further testing revealed that the application failed to properly validate URI schemes supplied to the parameter. As a result, an attacker could inject a malicious `javascript:` URI, leading to Cross-Site Scripting (XSS).
+
+The vulnerable endpoint was identified as:
+
+```http
+https://example.com/social?redirect=/somewhere
+```
+
+---
+
+# 🎯 Affected Component
+
+| Component          | Details                       |
+| ------------------ | ----------------------------- |
+| Feature            | Social Redirect Functionality |
+| Parameter          | redirect                      |
+| Vulnerability Type | Cross-Site Scripting (XSS)    |
+| Discovery Method   | Google Dorking                |
+| Scope              | Multiple program domains      |
+
+---
+
+# 🔍 Root Cause
+
+The application failed to properly validate and restrict URI schemes passed to the `redirect` parameter.
+
+Instead of allowing only trusted protocols such as:
+
+```text
+https://
+http://
+```
+
+the application also accepted:
+
+```text
+javascript:
+```
+
+This resulted in arbitrary JavaScript execution within the victim's browser.
+
+---
+
+# ⚠️ Impact
+
+Successful exploitation could allow an attacker to:
+
+* Execute arbitrary JavaScript in the victim's browser.
+* Perform phishing attacks.
+* Capture user keystrokes.
+* Steal non-HttpOnly session tokens.
+* Modify page content.
+* Perform actions on behalf of authenticated users.
+* Increase attack effectiveness by combining logout and login redirection.
+
+---
+
+# 🛠️ Technical Details
+
+## Reconnaissance
+
+Google Dorking was performed against the program's assets.
+
+### Search Query
+
+```text
+site:*.example.com inurl:redirect
+```
+
+Additional keywords tested:
+
+```text
+admin
+url
+redirect
+next
+redirect_to
+page
+site
+```
+
+---
+
+## Endpoint Discovery
+
+A redirect endpoint was identified:
+
+```http
+https://example.com/social?redirect=/somewhere
+```
+
+---
+
+## Open Redirect Verification
+
+The redirect parameter was tested with an external URL.
+
+### Payload
+
+```http
+https://example.com/social?redirect=https://google.com
+```
+
+### Result
+
+The application successfully redirected users to an external domain, confirming an Open Redirect.
+
+---
+
+# 🚀 Exploitation
+
+## Step 1
+
+Identify a user-controlled redirect parameter.
+
+---
+
+## Step 2
+
+Test external redirection.
+
+```http
+https://example.com/social?redirect=https://google.com
+```
+
+---
+
+## Step 3
+
+Inject a JavaScript URI.
+
+```http
+https://example.com/social?redirect=javascript://alert(1)
+```
+
+---
+
+## Step 4
+
+Authenticate to the application if required.
+
+---
+
+## Step 5
+
+The browser executes the JavaScript payload, resulting in Cross-Site Scripting.
+
+---
+
+# 💣 Payload
+
+### Basic Proof of Concept
+
+```javascript
+javascript://alert(1)
+```
+
+### Vulnerable Request
+
+```http
+https://example.com/social?redirect=javascript://alert(1)
+```
+
+---
+
+# 📷 Proof of Concept (PoC)
+
+### Observed Behavior
+
+1. User visits the crafted URL.
+2. Application processes the redirect parameter.
+3. JavaScript URI is executed.
+4. XSS payload runs in the victim's browser context.
+
+### Result
+
+```javascript
+alert(1)
+```
+
+was successfully executed.
+
+---
+
+# ⚠️ Additional Attack Scenario
+
+The application did not enforce protection during logout and re-authentication flows.
+
+An attacker could:
+
+1. Force a user to log out.
+2. Redirect the user to the malicious URL.
+3. Convince the user to log in again.
+4. Trigger JavaScript execution immediately after authentication.
+
+This significantly increases phishing and credential-harvesting risks.
+
+---
+
+# 🔒 Mitigation
+
+### Recommended Fixes
+
+* Allow only approved redirect destinations.
+* Implement a strict whitelist for redirect URLs.
+* Reject the `javascript:` URI scheme.
+* Validate and sanitize all user-controlled redirect parameters.
+* Use relative redirects where possible.
+* Implement Content Security Policy (CSP).
+* Perform server-side validation instead of relying on client-side checks.
+
+---
+
+# 📚 References
+
+* OWASP Cross-Site Scripting Prevention Cheat Sheet
+* OWASP Open Redirect Cheat Sheet
+* Google Hacking Database (GHDB)
+* OWASP Testing Guide
+
+---
+
+# 🏁 Conclusion
+
+A URI-based Cross-Site Scripting vulnerability was identified through Google Dorking and parameter analysis. The root cause was insufficient validation of the `redirect` parameter, allowing execution of malicious `javascript:` URIs. The issue affected multiple domains within the program scope and could lead to phishing, account compromise, and client-side code execution.
