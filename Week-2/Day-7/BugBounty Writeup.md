@@ -4,6 +4,8 @@
 
 * Platform: HackerOne
 
+* Hackerone Report:[here](https://bughunter25.medium.com/my-first-valid-xss-hackerone-f8ba0a7c647)
+
 * Vulnerability Type: Reflected XSS
 
 * Reported: 26/05/2018
