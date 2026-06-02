@@ -52,13 +52,11 @@
 
 ### P4 Severity Bug Research
 
-* Reviewed multiple P4 severity bug reports.
+* Reviewed P4 severity bug report[here](https://medium.com/@Manojchy/rate-limiting-on-form-for-email-triggering-5b9c8f2b9917)
 
 * Focused on common vulnerability patterns.
 
 * Studied exploitation techniques used by researchers.
-
-* Documented key learning points.
 
 ---
 
