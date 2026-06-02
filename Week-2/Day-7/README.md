@@ -1,6 +1,6 @@
 # Day 7 Progress Report
 
-* Date: DD/MM/YYYY
+* Date: 02/06/2026
 
 * Internship: Vulnerability Assessment & Penetration Testing
 
