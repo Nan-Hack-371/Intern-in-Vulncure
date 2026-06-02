@@ -1,239 +1,189 @@
-# 📌 Vulnerability Report: URI-Based Cross-Site Scripting (XSS)
+# Reflected Cross-Site Scripting (XSS)
 
 ---
 
-# 🎯 Objective
+* Platform: HackerOne
 
-Identify and validate security vulnerabilities within the target application's subdomains through reconnaissance and parameter testing.
+* Vulnerability Type: Reflected XSS
 
----
+* Reported: 26/05/2018
 
-# 📖 Description
-
-During security testing of a private bug bounty program, a potentially vulnerable redirect endpoint was discovered through Google Dorking. The endpoint accepted user-controlled input through a `redirect` parameter.
-
-Further testing revealed that the application failed to properly validate URI schemes supplied to the parameter. As a result, an attacker could inject a malicious `javascript:` URI, leading to Cross-Site Scripting (XSS).
-
-The vulnerable endpoint was identified as:
-
-```http
-https://example.com/social?redirect=/somewhere
-```
+* Bounty Awarded: $100
 
 ---
 
-# 🎯 Affected Component
-
-| Component          | Details                       |
-| ------------------ | ----------------------------- |
-| Feature            | Social Redirect Functionality |
-| Parameter          | redirect                      |
-| Vulnerability Type | Cross-Site Scripting (XSS)    |
-| Discovery Method   | Google Dorking                |
-| Scope              | Multiple program domains      |
+## Description
 
 ---
 
-# 🔍 Root Cause
+* While performing reconnaissance on the target application, multiple endpoints and pages were reviewed.
 
-The application failed to properly validate and restrict URI schemes passed to the `redirect` parameter.
-
-Instead of allowing only trusted protocols such as:
+* During testing, an unusual URL path was identified:
 
 ```text
-https://
-http://
+https://example.com/abc/]
 ```
 
-the application also accepted:
+* The page loaded normally, but further investigation revealed interesting behavior in the page source.
+
+---
+
+## Vulnerability
+
+---
+
+* User-controlled URL path data was reflected inside an HTML comment.
+
+* The application failed to properly sanitize special characters supplied in the URL path.
+
+* An attacker could terminate the comment and inject arbitrary HTML or JavaScript.
+
+---
+
+## Affected Component
+
+---
+
+* URL Path Handling
+
+* HTML Comment Context
+
+* Multiple pages across the affected domain
+
+---
+
+## Root Cause
+
+---
+
+* User input from the URL path was embedded directly into an HTML comment.
+
+* Special characters were not filtered or encoded.
+
+* The application allowed comment termination using attacker-controlled input.
+
+---
+
+## Technical Details
+
+---
+
+* Inspection of the page source revealed a commented string containing the URL path.
+
+* Any value supplied in the path appeared inside the comment.
+
+Example:
+
+```html
+<!-- /abc/] -->
+```
+
+* This indicated that user input was reflected without proper sanitization.
+
+---
+
+## Exploitation
+
+---
+
+1. Visit a page containing the vulnerable URL path reflection.
+
+2. View the page source.
+
+3. Confirm that the URL path is reflected inside an HTML comment.
+
+4. Close the comment using a comment termination sequence.
+
+5. Inject arbitrary HTML or JavaScript.
+
+6. Reload the page and observe script execution.
+
+---
+
+## Payload
+
+---
+
+```html
+]--><script>alert(1)</script>
+```
+
+---
+
+## Proof of Concept
+
+---
+
+Vulnerable URL:
 
 ```text
-javascript:
+https://example.com/abc/]--><script>alert(1)</script>
 ```
 
-This resulted in arbitrary JavaScript execution within the victim's browser.
-
----
-
-# ⚠️ Impact
-
-Successful exploitation could allow an attacker to:
-
-* Execute arbitrary JavaScript in the victim's browser.
-* Perform phishing attacks.
-* Capture user keystrokes.
-* Steal non-HttpOnly session tokens.
-* Modify page content.
-* Perform actions on behalf of authenticated users.
-* Increase attack effectiveness by combining logout and login redirection.
-
----
-
-# 🛠️ Technical Details
-
-## Reconnaissance
-
-Google Dorking was performed against the program's assets.
-
-### Search Query
-
-```text
-site:*.example.com inurl:redirect
-```
-
-Additional keywords tested:
-
-```text
-admin
-url
-redirect
-next
-redirect_to
-page
-site
-```
-
----
-
-## Endpoint Discovery
-
-A redirect endpoint was identified:
-
-```http
-https://example.com/social?redirect=/somewhere
-```
-
----
-
-## Open Redirect Verification
-
-The redirect parameter was tested with an external URL.
-
-### Payload
-
-```http
-https://example.com/social?redirect=https://google.com
-```
-
-### Result
-
-The application successfully redirected users to an external domain, confirming an Open Redirect.
-
----
-
-# 🚀 Exploitation
-
-## Step 1
-
-Identify a user-controlled redirect parameter.
-
----
-
-## Step 2
-
-Test external redirection.
-
-```http
-https://example.com/social?redirect=https://google.com
-```
-
----
-
-## Step 3
-
-Inject a JavaScript URI.
-
-```http
-https://example.com/social?redirect=javascript://alert(1)
-```
-
----
-
-## Step 4
-
-Authenticate to the application if required.
-
----
-
-## Step 5
-
-The browser executes the JavaScript payload, resulting in Cross-Site Scripting.
-
----
-
-# 💣 Payload
-
-### Basic Proof of Concept
-
-```javascript
-javascript://alert(1)
-```
-
-### Vulnerable Request
-
-```http
-https://example.com/social?redirect=javascript://alert(1)
-```
-
----
-
-# 📷 Proof of Concept (PoC)
-
-### Observed Behavior
-
-1. User visits the crafted URL.
-2. Application processes the redirect parameter.
-3. JavaScript URI is executed.
-4. XSS payload runs in the victim's browser context.
-
-### Result
+Result:
 
 ```javascript
 alert(1)
 ```
 
-was successfully executed.
+* The JavaScript payload executed successfully.
+
+* Reflected Cross-Site Scripting was confirmed.
 
 ---
 
-# ⚠️ Additional Attack Scenario
-
-The application did not enforce protection during logout and re-authentication flows.
-
-An attacker could:
-
-1. Force a user to log out.
-2. Redirect the user to the malicious URL.
-3. Convince the user to log in again.
-4. Trigger JavaScript execution immediately after authentication.
-
-This significantly increases phishing and credential-harvesting risks.
+## Impact
 
 ---
 
-# 🔒 Mitigation
+* Arbitrary JavaScript execution.
 
-### Recommended Fixes
+* Session theft.
 
-* Allow only approved redirect destinations.
-* Implement a strict whitelist for redirect URLs.
-* Reject the `javascript:` URI scheme.
-* Validate and sanitize all user-controlled redirect parameters.
-* Use relative redirects where possible.
-* Implement Content Security Policy (CSP).
-* Perform server-side validation instead of relying on client-side checks.
+* Credential phishing.
 
----
+* DOM manipulation.
 
-# 📚 References
+* User impersonation.
 
-* OWASP Cross-Site Scripting Prevention Cheat Sheet
-* OWASP Open Redirect Cheat Sheet
-* Google Hacking Database (GHDB)
-* OWASP Testing Guide
+* Client-side attacks against visitors.
 
 ---
 
-# 🏁 Conclusion
+## Additional Findings
 
-A URI-based Cross-Site Scripting vulnerability was identified through Google Dorking and parameter analysis. The root cause was insufficient validation of the `redirect` parameter, allowing execution of malicious `javascript:` URIs. The issue affected multiple domains within the program scope and could lead to phishing, account compromise, and client-side code execution.
+---
+
+* The same behavior was observed across multiple pages.
+
+* Every page on the affected domain reflected the URL path inside an HTML comment.
+
+* As a result, the vulnerability affected the entire domain rather than a single endpoint.
+
+---
+
+## Mitigation
+
+---
+
+* Never place user-controlled input directly inside HTML comments.
+
+* Apply proper output encoding.
+
+* Sanitize special characters before rendering.
+
+* Implement a Content Security Policy (CSP).
+
+* Validate all URL path inputs server-side.
+
+---
+
+## Conclusion
+
+---
+
+* A reflected Cross-Site Scripting vulnerability was discovered due to unsafe reflection of URL path data inside HTML comments.
+
+* By terminating the comment and injecting a script tag, arbitrary JavaScript execution was achieved.
+
+* The issue affected multiple pages across the domain and was successfully reported through HackerOne.
