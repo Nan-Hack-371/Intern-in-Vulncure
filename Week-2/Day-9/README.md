@@ -107,6 +107,10 @@ admin panels
 * Real-world exploitation case studies
 
 ---
+## 4. P4 Severity Bug-Insecure Data Storage
+
+Today I studied a P4 (Low Severity) bug related to Insecure Data Storage - Sensitive Application Data Stored Unencrypted 
+you can see [here](https://medium.com/@nanda_kumar/bugbounty-how-snapdeal-indias-popular-e-commerce-website-kept-their-user-data-at-risk-3d02b4092d9c) real writeup
 
 ## Progress Update
 
