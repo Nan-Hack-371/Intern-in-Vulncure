@@ -12,7 +12,9 @@ Today I focused on researching a P4 bug related to cryptographic weaknesses, ana
 
 ### Vulnerability
 
-**P4 | Cryptographic Weakness | Insufficient Entropy | Small Seed Space in Pseudo-Random Number Generator (PRNG)**
+**P4 | Cryptographic Weakness | Insufficient Entropy | Small Seed Space in Pseudo-Random Number Generator (PRNG)** 
+
+Writeup link: [here](https://www.reversemode.com/2024/01/finding-vulnerabilities-in-swiss-posts.html)
 
 ### Description
 
