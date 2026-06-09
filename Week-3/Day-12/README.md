@@ -88,7 +88,18 @@ Completed Chapter 6 of the Bug Bounty book focusing on reconnaissance methodolog
 
 
 ---
+## Mastering Bugs Progress
 
+As part of my ongoing **Mastering Bugs** initiative, I reviewed and documented a real-world **DOM-Based XSS** writeup.
+
+### Activities Performed
+- Analyzed the vulnerability root cause.
+- Studied insecure dynamic resource loading through user-controlled parameters.
+- Traced the attack flow from JavaScript execution to account takeover.
+- Reviewed exploitation techniques and mitigation strategies.
+- Added structured notes and documentation to the **Mastering Bugs** folder for future reference.
+
+---
 ## Outcome
 
 Day-12 strengthened my understanding of client-side vulnerabilities, session management flaws, stored XSS attacks, and reconnaissance techniques. The practical analysis of real-world writeups and CVEs helped improve my ability to identify root causes, understand attack flows, and document security findings effectively.
