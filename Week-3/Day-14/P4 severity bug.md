@@ -1,61 +1,49 @@
-OAuth Misconfiguration to 0-Click Account Takeover (ATO)
-A summary of a critical vulnerability where an OAuth implementation flaw allowed full account takeover without user interaction by manipulating the registration request.
+# OAuth Misconfiguration to 0-Click Account Takeover (ATO)
+
+This repository documents an Account Takeover (ATO) vulnerability arising from a critical implementation flaw in an OAuth 2.0 registration flow. 
 
 Original Writeup:[here](https://medium.com/@mohamed0xmuslim/oauth-misconfiguration-leads-to-0-click-ato-b407fe05fdf4)
 
-📝 Description
-The target application (an online marketplace) implemented a "Sign up with Facebook" OAuth feature. During the OAuth consent process, users have the ability to manually deselect or remove permissions, such as hiding their email address.
+---
 
-When a user hides their email, the application fails to handle the missing data securely. Instead of aborting the process or validating the email via a strict token verification check on the backend, it serves a registration form with an empty, disabled email field. Upon submission, the backend accepts any arbitrary email provided in the HTTP request body, matching it directly to existing accounts without verifying ownership.
+## Description
+* The target application allows users to register and sign in using third-party OAuth providers (specifically Facebook).
+* During a normal OAuth flow, user data such as First Name, Last Name, and Email are fetched from the social provider to automatically create or link the profile.
+* However, if a user modifies their OAuth privacy settings to restrict sharing their email address, the application redirects them to a secondary registration page to manually complete their account profile.
+* Due to a flaw in how the backend validates this secondary registration phase, an attacker can manipulate the submission to hijack any pre-existing account on the platform without requiring any victim interaction.
 
-🛑 Vulnerability
-Insecure Request Processing / Improper Input Validation: The application blindly trusts the email identifier passed directly from the client-side POST body during the account creation phase, rather than relying strictly on verified attributes returned directly from the OAuth provider's secure token.
+---
 
-Lack of Identity Verification: The backend logs the session into an already registered, verified email address without requiring any password or secondary validation link.
+## Vulnerability
+* **Broken Authentication & Logic Flaw:** The application blindly trusts the user-supplied email input on the registration fallback page.
+* **Missing Server-Side Validation:** The application fails to re-verify whether the user actually owns the manually entered email address if that address is already marked as "verified" inside the database for an existing user.
 
-⚙️ Vulnerable Component
-Component: Registration / OAuth Callback Handler
+---
 
-Endpoint: The account creation API endpoint triggered post-OAuth redirection (e.g., /create-account or /register/oauth).
+## Vulnerable Component
+* **Component:** OAuth Registration Fallback Endpoint / Registration Form API
+* **Vulnerable Parameter:** `email` 
 
-Parameter: email= parameter within the POST request body.
+---
 
-⚡ Exploitation Technique
-OAuth Interception: The attacker initiates a "Sign up with Facebook" flow.
+## Exploitation Technique
+* **OAuth Data Restriction:** The attacker initiates registration via Facebook but blocks the application from accessing their Facebook email address.
+* **Request Interception:** Because the email is missing, the application redirects the attacker to a fallback account creation form where the email input field is rendered blank/disabled on the UI.
+* **Parameter Pollution / Injection:** The attacker intercepts the registration HTTP request and manually injects a victim's pre-registered and verified email address into the `email` parameter.
+* **Authentication Bypass:** Because the injected email is already flagged as verified in the database, the backend skips the verification email check and directly logs the attacker into the victim's account session.
 
-Permission Stripping: In the Facebook OAuth consent popup, the attacker edits permissions and deselects the email address.
+---
 
-Form Completion: The application redirects the attacker to a profile completion page where the email field is blank (and disabled via the UI).
+## Proof of Concept (PoC)
+1. Initiate the registration flow using a Facebook account.
+2. In the Facebook OAuth permissions dialog, uncheck/deny access to your **Email Address**.
+3. You will be redirected to the target website's fallback `Create Account` page where the email field is empty.
+4. Fill out a random username, click **Create Account**, and intercept the outgoing HTTP request using an interception proxy (e.g., Burp Suite).
+5. Modify the POST request parameters as shown below:
 
-Request Manipulation: The attacker populates a unique username, clicks "Create Account", and intercepts the outgoing HTTP request using a proxy tool (like Burp Suite).
-
-Payload Injection: The attacker changes the empty email= parameter to the victim's registered email address.
-
-Account Takeover: The backend processes the request, associates the OAuth token session with the victim's email, and logs the attacker into the victim's account instantly.
-
-🧪 Proof of Concept (PoC)
-Navigate to the registration page and click Sign up with Facebook.
-
-Click "Edit Access" on the Facebook permission page and uncheck the Email address permission.
-
-You will be redirected to the application's secondary setup page (email field will be empty).
-
-Fill in the required username field and click Create Account.
-
-Intercept the HTTP request:
-
-HTTP
-POST /signup/complete HTTP/1.1
-Host: target-marketplace.com
+```http
+POST /api/v1/auth/register-oauth HTTP/1.1
+Host: target.com
 Content-Type: application/x-www-form-urlencoded
 
-First_name=Attacker&Second_name=User&Username=attacker123&email=
-Modify the email parameter to match the victim's email address:
-
-HTTP
-POST /signup/complete HTTP/1.1
-Host: target-marketplace.com
-Content-Type: application/x-www-form-urlencoded
-
-First_name=Attacker&Second_name=User&Username=attacker123&email=victim@target.com
-Forward the request. The application responds with a valid session/cookie belonging to victim@target.com.
+First_name=Attacker&Second_name=User&Username=attacker123&email=victim_verified_email@target.com
