@@ -1,229 +1,543 @@
-Access Control Mastery
-Overview
+# Access Control Fundamentals
 
-Access Control is one of the most critical security mechanisms in modern web applications.
+## Overview
 
-It determines:
+Access Control is a security mechanism that determines:
 
-Who can access a resource
-What actions a user can perform
-Which data a user can view
-Which functionality a user can use
+* Who can access a resource
+* What actions they can perform
+* Which data they can view
+* Which functionality they can use
 
-When access controls are improperly implemented, attackers can gain unauthorized access to data, functionality, or administrative features.
+It is one of the most critical security controls in any application.
 
-According to OWASP, Broken Access Control consistently ranks among the most severe and impactful web application vulnerabilities.
+When access control is improperly implemented, attackers may gain access to:
 
-What is Access Control?
+* Sensitive information
+* Other users' accounts
+* Administrative functionality
+* Internal resources
 
-Access Control is the process of enforcing restrictions on authenticated users.
+According to OWASP, Broken Access Control is consistently one of the most common and impactful web application vulnerabilities.
 
-Simply put:
+---
 
-Authentication
-=
-Who Are You?
+# What is Access Control?
 
-Authorization
-=
-What Are You Allowed To Do?
+Access control answers a simple question:
 
-Many applications correctly verify a user's identity but fail to properly verify what that user is allowed to access.
+```text
+Should this user be allowed
+to perform this action?
+```
 
-Example
+Every request made to an application should be validated before access is granted.
 
-Imagine an application with three user roles:
+---
 
-User
-Moderator
-Administrator
+# Example
 
-Each role should have different permissions.
+### User
 
-User
+```text
+Regular User
+```
 
-Can:
+### Allowed Actions
 
-View own profile
-Update own information
-Create support tickets
+* View own profile
+* Edit own account
+* Change own password
 
-Cannot:
+### Restricted Actions
 
-Delete users
-Manage roles
-Access admin dashboard
-Administrator
+* Delete users
+* View all customer data
+* Modify user roles
+* Access admin dashboard
 
-Can:
+If a regular user can perform restricted actions, an Access Control vulnerability exists.
 
-Manage users
-Delete accounts
-Access sensitive data
-Modify permissions
-Access Control Failure
+---
 
-If a normal user accesses:
+# Why Access Control Matters
 
+Without proper access control, attackers may:
+
+* Read sensitive information
+* Modify data
+* Delete resources
+* Take over accounts
+* Gain administrative access
+
+Even a single missing authorization check can lead to complete application compromise.
+
+---
+
+# Authentication vs Authorization
+
+Many beginners confuse these concepts.
+
+---
+
+## Authentication
+
+Authentication verifies:
+
+```text
+Who are you?
+```
+
+Examples:
+
+* Username and Password
+* OTP Verification
+* Multi-Factor Authentication (MFA)
+
+---
+
+## Authorization
+
+Authorization verifies:
+
+```text
+What are you allowed to do?
+```
+
+Examples:
+
+* Can view profile
+* Can edit profile
+* Cannot access admin panel
+
+---
+
+## Example
+
+User logs in successfully.
+
+```text
+Authentication ✓
+```
+
+User attempts to access:
+
+```text
 /admin
+```
 
-and gains administrative functionality,
+Application checks permissions.
 
-then the application suffers from Broken Access Control.
+```text
+Authorization ✓ or ✗
+```
 
-Why Access Control Matters
+A user can be authenticated but still unauthorized.
 
-Broken Access Control often leads to:
+---
 
-Account takeover
-Data exposure
-Privilege escalation
-Financial fraud
-Administrative compromise
-Full application takeover
+# Access Control Flow
 
-Unlike many vulnerabilities, access control flaws frequently require no advanced payloads.
+```text
+User Request
+      ↓
+Authentication Check
+      ↓
+Authorization Check
+      ↓
+Access Granted / Denied
+```
 
-Often a simple request modification is enough.
+---
 
-Types of Access Control Vulnerabilities
-1. Vertical Privilege Escalation
+# Types of Access Control Vulnerabilities
 
-A low-privileged user gains access to functionality reserved for higher-privileged users.
+There are three major categories.
 
-Example
+---
+
+# 1. Vertical Privilege Escalation
+
+## Definition
+
+A lower-privileged user gains access to functionality intended for higher-privileged users.
+
+### Example
+
+```text
 User
-  ↓
-Administrator
+ ↓
+Admin Functionality
+```
 
-Example:
+### Example URL
 
+```text
 /admin
+```
 
-becomes accessible to a normal user.
+### Impact
 
-2. Horizontal Privilege Escalation
+* Administrative access
+* User management
+* System configuration changes
+
+---
+
+# 2. Horizontal Privilege Escalation
+
+## Definition
 
 A user gains access to another user's resources.
 
-Example
+### Example
 
-User A accesses:
+```text
+User A
+ ↓
+User B Account
+```
 
+### Example URL
+
+```text
 /account?id=123
-
-Then changes:
-
-123 → 124
-
-and accesses User B's account.
-
-3. Insecure Direct Object References (IDOR)
-
-A specific form of access control vulnerability where user-controlled identifiers are used to access resources without proper authorization checks.
-
-Example
-/invoice?id=500
+```
 
 ↓
 
-/invoice?id=501
-4. Multi-Step Process Bypass
+```text
+/account?id=124
+```
 
-Applications often protect some workflow steps but forget others.
+### Impact
 
-Example
-Step 1 Protected
-Step 2 Protected
-Step 3 Unprotected
+* Data theft
+* Account compromise
+* Privacy violations
 
-Attackers directly access the final step.
+---
 
-5. Platform Misconfiguration
+# 3. Context-Dependent Access Control
 
-Authorization mechanisms fail due to framework or infrastructure misconfiguration.
+## Definition
 
-Examples:
+Access restrictions depend on application state or workflow.
 
-X-Original-URL bypass
-X-Rewrite-URL bypass
-Reverse proxy misconfigurations
-6. URL Matching Discrepancies
+### Example
 
-Access controls and applications interpret URLs differently.
+```text
+Step 1
+Step 2
+Step 3
+```
 
-Examples:
+An attacker skips:
 
-/admin/deleteUser
+```text
+Step 1
+Step 2
+```
 
-↓
+and directly accesses:
 
-/ADMIN/deleteUser
+```text
+Step 3
+```
 
-↓
+### Impact
 
-/admin/deleteUser/
-7. Method-Based Access Control Bypass
+* Unauthorized actions
+* Workflow bypass
+* Business process abuse
 
-An application blocks one HTTP method but allows another.
+---
 
-Example
+# Common Access Control Weaknesses
 
-Blocked:
+## Unprotected Functionality
 
-POST /admin/deleteUser
+Sensitive functionality exists but lacks authorization checks.
 
-Allowed:
+Example:
 
-GET /admin/deleteUser
-Core Access Control Principles
-
-A secure application should always enforce:
-
-Principle of Least Privilege
-
-Users should only receive the permissions necessary to perform their tasks.
-
-Minimum Access
-=
-Reduced Risk
-Deny By Default
-
-If access is not explicitly allowed:
-
-DENY
-Server-Side Enforcement
-
-Authorization decisions must occur on the server.
-
-Never trust:
-
-Hidden fields
-Cookies
-URL parameters
-JavaScript logic
-Client-side controls
-Common Places to Test
-
-During bug bounty hunting, pay special attention to:
-
-User Profiles
-/profile
-/account
-/settings
-Administrative Panels
+```text
 /admin
-/manage
-/dashboard
-APIs
+```
+
+---
+
+## Hidden URLs
+
+Developers rely on secrecy instead of security.
+
+Example:
+
+```text
+/administrator-panel-x892
+```
+
+---
+
+## Parameter Manipulation
+
+Authorization depends on user-controlled parameters.
+
+Examples:
+
+```text
+role=user
+admin=false
+isAdmin=0
+```
+
+---
+
+## Insecure Direct Object References (IDOR)
+
+Applications expose internal object references.
+
+Examples:
+
+```text
+userId=100
+orderId=500
+invoiceId=700
+```
+
+---
+
+## Workflow Bypass
+
+Attackers skip required steps and directly access privileged functionality.
+
+---
+
+# Common Sources of Access Control Issues
+
+### URL Parameters
+
+```text
+id=
+userId=
+accountId=
+role=
+```
+
+---
+
+### Cookies
+
+```text
+role=user
+isAdmin=false
+```
+
+---
+
+### HTTP Methods
+
+```text
+GET
+POST
+PUT
+DELETE
+```
+
+---
+
+### Request Headers
+
+```text
+Referer
+X-Original-URL
+X-Rewrite-URL
+```
+
+---
+
+### API Endpoints
+
+```text
 /api/users/
 /api/orders/
-/api/documents/
-Financial Features
-/payments
-/invoices
-/orders
-File Management
-/download
-/uploads
-/documents
+/api/admin/
+```
+
+---
+
+# Access Control Testing Methodology
+
+## Step 1
+
+Create multiple accounts.
+
+Example:
+
+```text
+User A
+User B
+Admin
+```
+
+---
+
+## Step 2
+
+Map all functionality.
+
+Identify:
+
+* Profile pages
+* Admin pages
+* APIs
+* Account settings
+* User management features
+
+---
+
+## Step 3
+
+Capture requests.
+
+Use:
+
+```text
+Burp Suite
+```
+
+to observe how the application handles authorization.
+
+---
+
+## Step 4
+
+Test for:
+
+* Vertical Privilege Escalation
+* Horizontal Privilege Escalation
+* IDOR
+* Workflow Bypass
+* Method-Based Bypass
+* Header-Based Bypass
+
+---
+
+## Step 5
+
+Compare responses.
+
+Look for:
+
+* Different data
+* Status code changes
+* Unauthorized functionality
+* Sensitive information disclosure
+
+---
+
+# Real Bug Bounty Mindset
+
+Don't ask:
+
+```text
+Can I access this page?
+```
+
+Ask:
+
+```text
+What authorization check
+protects this page?
+```
+
+Then ask:
+
+```text
+Can I bypass that check?
+```
+
+This mindset is how most real-world Access Control vulnerabilities are discovered.
+
+---
+
+# Repository Roadmap
+
+```text
+Access-Control/
+│
+├── 01-Introduction-to-Access-Control
+│
+├── 02-Vertical-Privilege-Escalation
+│
+├── 03-Horizontal-Privilege-Escalation
+│
+├── 04-Access-Control-Bypass-Techniques
+│
+├── 05-Platform-Misconfigurations
+│
+├── 06-URL-Matching-Discrepancies
+│
+├── 07-Method-Based-Bypass
+│
+└── Labs
+```
+
+---
+
+# Quick Revision Cheat Sheet
+
+## Authentication
+
+```text
+Who are you?
+```
+
+---
+
+## Authorization
+
+```text
+What are you allowed to do?
+```
+
+---
+
+## Vertical Privilege Escalation
+
+```text
+User
+ ↓
+Admin
+```
+
+---
+
+## Horizontal Privilege Escalation
+
+```text
+User A
+ ↓
+User B
+```
+
+---
+
+## IDOR
+
+```text
+Change Identifier
+ ↓
+Access Another Resource
+```
+
+---
+
+## Golden Rule
+
+```text
+Every request must verify
+that the current user is
+authorized to perform
+the requested action.
+```
