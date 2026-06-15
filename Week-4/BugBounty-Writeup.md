@@ -1,302 +1,513 @@
-🚀 Injecting Java In-Memory Payloads for Post-Exploitation
+# 🚀 Injecting Java In-Memory Payloads for Post-Exploitation
 
-A security research repository documenting advanced Java post-exploitation techniques involving JVM instrumentation, memory-resident payloads, custom class loading, and in-memory persistence across enterprise Java applications.
+> A security research repository exploring advanced Java post-exploitation techniques, memory-resident payloads, JVM instrumentation abuse, and in-memory persistence mechanisms used against enterprise Java applications.
 
-📖 Description
+###original writeup:[here](https://www.synacktiv.com/publications/injecting-java-in-memory-payloads-for-post-exploitation.html#loading-through-a-template-injection)
 
-Modern Java enterprise applications often run inside complex environments such as Tomcat, Jetty, Spring, Struts2, Jenkins, Bitbucket, and Confluence.
+---
 
-When attackers obtain Remote Code Execution (RCE), they may choose not to deploy traditional malware on disk. Instead, they can abuse JVM internals to inject malicious classes directly into memory, creating stealthy persistence mechanisms that are difficult to detect.
+# 📖 Description
 
-This repository analyzes several real-world attack paths and demonstrates how Java in-memory payloads can be leveraged during post-exploitation while also discussing defensive detection opportunities.
+Modern Java enterprise applications frequently operate within large ecosystems such as Apache Tomcat, Spring Framework, Jenkins, Bitbucket, Jetty, and Confluence.
 
-🎯 Objectives
+After achieving Remote Code Execution (RCE), attackers may avoid dropping files on disk and instead leverage JVM internals to execute malicious code directly in memory. These techniques enable stealthy persistence, runtime manipulation, and evasion of traditional security controls.
 
-This repository aims to:
+This repository documents common attack paths, vulnerable components, post-exploitation techniques, and defensive monitoring opportunities related to Java in-memory payloads.
 
-Understand Java post-exploitation techniques.
-Study JVM Instrumentation and Attach API abuse.
-Analyze memory-resident persistence mechanisms.
-Learn how attackers interact with application runtimes.
-Explore defensive detection strategies.
-Improve threat hunting capabilities for Java environments.
-🏗️ Technologies Covered
-Java
-JVM
-Spring Framework
-Apache Tomcat
-Jetty
-Struts2
-Groovy
-Jenkins
-Bitbucket
-Confluence
-⚠️ Vulnerable Components
+---
 
-The research focuses on applications where an attacker has already achieved code execution through a vulnerability.
+# 🎯 Objectives
 
-1. Bitbucket Data Center
-Vulnerability
+This research aims to:
 
-CVE-2022-36804
+* Understand Java post-exploitation methodologies.
+* Study JVM Attach API and Instrumentation API abuse.
+* Analyze memory-resident persistence mechanisms.
+* Explore dynamic class loading techniques.
+* Understand runtime framework manipulation.
+* Improve detection and threat-hunting capabilities.
 
-Component
-Git Archive Export Functionality
-Root Cause
-Command Injection
-Unsanitized arguments passed to Git commands
-Access Required
-Public repository access
-Result
-Remote Code Execution (RCE)
-2. Jenkins
-Vulnerabilities
-CVE-2017-1000353
-CVE-2018-1000861
-CVE-2019-1003005
-CVE-2019-1003029
-Components
-Jenkins Remoting
-Groovy Script Console
-Pipeline Sandbox
-Root Cause
-Deserialization flaws
-Sandbox bypasses
-Arbitrary Groovy execution
-Result
-Controller compromise
-Arbitrary code execution
-3. Confluence Data Center
-Vulnerability
+---
 
-CVE-2023-22527
+# 🏗️ Technologies Covered
 
-Component
-Velocity Template Engine
-Root Cause
-Server Side Template Injection (SSTI)
-OGNL Expression Injection
-Access Required
-Unauthenticated
-Result
-Remote Code Execution (RCE)
-🔥 Exploitation Techniques
-JVM Attach API Abuse
-Overview
+### Programming & Runtime
 
-The JVM Attach API allows one Java process to attach to another running JVM.
+* Java
+* JVM
+* Java Agents
+* Instrumentation API
 
-Attacker Goal
-Inject Java Agents
-Load arbitrary JAR files
-Execute code inside trusted processes
-Benefits
-Fileless execution
-Runtime access
-Difficult detection
-Instrumentation API Abuse
-Overview
+### Enterprise Frameworks
 
-Java Instrumentation enables runtime inspection and modification of classes.
+* Spring Framework
+* Apache Tomcat
+* Jetty
+* Struts2
 
-Capabilities
-Load agents
-Modify bytecode
-Intercept application logic
-Hook application functions
-Dynamic Class Loading
-Technique
+### Enterprise Applications
 
-Attackers create custom:
+* Jenkins
+* Bitbucket Data Center
+* Confluence Data Center
 
-ClassLoaders
-URLClassLoaders
-ByteArrayClassLoaders
-Purpose
-Load malicious classes directly into memory
-Avoid disk artifacts
-Extend application functionality
-In-Memory Webshell Injection
-Overview
+---
 
-Instead of writing a webshell to disk, attackers register components directly inside the running application.
+# ⚠️ Vulnerable Components
 
-Common Targets
-Servlet Filters
-Tomcat Valves
-Spring Controllers
-Event Listeners
-Advantages
-No filesystem evidence
-Difficult forensic recovery
-Persistent until restart
-Request Interception
-Goal
+The techniques discussed assume an attacker has already achieved Remote Code Execution through a vulnerable application.
 
-Intercept all HTTP requests processed by the application.
+---
 
-Techniques
-Custom Valve Registration
-Filter Injection
-Middleware Manipulation
-Possible Outcomes
-Session theft
-Request monitoring
-Credential harvesting
-Runtime Framework Abuse
-Spring Framework
+## 1️⃣ Bitbucket Data Center
 
-Attackers may:
+### Vulnerability
 
-Access Beans
-Execute internal services
-Query application state
-Examples
-User services
-Permission services
-Authentication services
-📸 Proof of Concept
-PoC 1 – Java Agent Loading
-Objective
+* CVE-2022-36804
 
-Load a malicious Java agent into an already running JVM process.
+### Affected Component
 
-Outcome
-Agent executes inside target application.
-Full runtime access obtained.
-PoC 2 – Runtime Class Injection
-Objective
+* Git Archive Export Functionality
 
-Inject attacker-controlled classes.
+### Root Cause
 
-Outcome
-New functionality added without touching disk.
-Application behavior modified dynamically.
-PoC 3 – Memory-Resident Backdoor
-Objective
+* Command Injection
+* Improper input validation
 
-Register malicious components directly in memory.
+### Impact
 
-Outcome
-Persistent access.
-Difficult detection.
-PoC 4 – Request Interception
-Objective
+* Remote Code Execution (RCE)
+* Runtime compromise
 
-Monitor incoming requests.
+---
 
-Outcome
-Visibility into application traffic.
-Potential credential exposure.
-💥 Impact
-Confidentiality Impact
-High
+## 2️⃣ Jenkins
+
+### Vulnerabilities
+
+* CVE-2017-1000353
+* CVE-2018-1000861
+* CVE-2019-1003005
+* CVE-2019-1003029
+
+### Affected Components
+
+* Jenkins Remoting
+* Groovy Script Console
+* Pipeline Sandbox
+
+### Root Cause
+
+* Deserialization vulnerabilities
+* Sandbox bypasses
+* Arbitrary Groovy execution
+
+### Impact
+
+* Controller compromise
+* Arbitrary code execution
+
+---
+
+## 3️⃣ Confluence Data Center
+
+### Vulnerability
+
+* CVE-2023-22527
+
+### Affected Component
+
+* Velocity Template Engine
+
+### Root Cause
+
+* Server-Side Template Injection (SSTI)
+* OGNL Injection
+
+### Impact
+
+* Unauthenticated Remote Code Execution
+
+---
+
+# 🔥 Exploitation Techniques
+
+---
+
+## JVM Attach API Abuse
+
+### Overview
+
+The Attach API allows one Java process to connect to another JVM running under the same user context.
+
+### Potential Abuse
+
+* Loading Java Agents
+* Runtime code execution
+* In-memory persistence
+
+### Benefits for Attackers
+
+* Fileless execution
+* Runtime access
+* Reduced forensic artifacts
+
+---
+
+## Instrumentation API Abuse
+
+### Overview
+
+The Java Instrumentation API enables runtime modification of loaded classes.
+
+### Capabilities
+
+* Bytecode modification
+* Runtime hooks
+* Class inspection
+* Agent loading
+
+### Potential Impact
+
+* Logic manipulation
+* Request interception
+* Runtime monitoring
+
+---
+
+## Dynamic Class Loading
+
+### Overview
+
+Custom ClassLoaders can introduce new classes into a running application.
+
+### Common Implementations
+
+* URLClassLoader
+* Custom ClassLoader
+* Byte Array Class Loader
+
+### Benefits
+
+* In-memory execution
+* Avoidance of disk artifacts
+* Runtime extension
+
+---
+
+## In-Memory Webshell Injection
+
+### Overview
+
+Malicious components are registered directly into application memory.
+
+### Common Targets
+
+* Servlet Filters
+* Tomcat Valves
+* Spring Controllers
+* Event Listeners
+
+### Advantages
+
+* Difficult detection
+* No filesystem indicators
+* Persistence until restart
+
+---
+
+## HTTP Request Interception
+
+### Objective
+
+Monitor and manipulate application traffic.
+
+### Techniques
+
+* Filter Injection
+* Valve Registration
+* Middleware Manipulation
+
+### Possible Outcomes
+
+* Session monitoring
+* Credential exposure
+* Request modification
+
+---
+
+## Runtime Framework Abuse
+
+### Spring Framework
+
+Attackers may interact with:
+
+* Dependency Injection Containers
+* Authentication Services
+* User Services
+* Internal APIs
+
+### Potential Impact
+
+* Privilege escalation
+* Unauthorized operations
+* Internal service abuse
+
+---
+
+# 📸 Proof of Concept Scenarios
+
+## PoC 1 — Java Agent Loading
+
+### Objective
+
+Inject a Java Agent into an active JVM process.
+
+### Result
+
+* Runtime code execution
+* Full access to application context
+
+---
+
+## PoC 2 — Runtime Class Injection
+
+### Objective
+
+Load attacker-controlled classes dynamically.
+
+### Result
+
+* New functionality added in memory
+* Application behavior modified
+
+---
+
+## PoC 3 — Memory-Resident Persistence
+
+### Objective
+
+Register malicious components within memory.
+
+### Result
+
+* Persistent runtime access
+* Minimal forensic footprint
+
+---
+
+## PoC 4 — Request Interception
+
+### Objective
+
+Capture application requests during processing.
+
+### Result
+
+* Traffic visibility
+* Credential interception opportunities
+
+---
+
+# 💥 Impact
+
+---
+
+## Confidentiality Impact
+
+### High
 
 Potential access to:
 
-User accounts
-Session tokens
-Application secrets
-Internal data
-Integrity Impact
-High
+* User accounts
+* Session tokens
+* Internal application data
+* Sensitive business information
+
+---
+
+## Integrity Impact
+
+### High
 
 Attackers may:
 
-Modify application behavior
-Alter requests
-Manipulate responses
-Create unauthorized sessions
-Availability Impact
-Medium
+* Modify application logic
+* Alter requests and responses
+* Create unauthorized sessions
+* Manipulate business workflows
 
-Possible outcomes:
+---
 
-Service instability
-Resource exhaustion
-Application crashes
-Persistence Impact
-High
+## Availability Impact
 
-Memory-resident implants can:
+### Medium
 
-Survive without disk artifacts
-Remain hidden from traditional AV
-Evade signature-based detection
-🔍 Detection Opportunities
-Process Monitoring
+Possible effects:
 
-Monitor:
+* Application instability
+* Service disruption
+* Resource exhaustion
 
+---
+
+## Persistence Impact
+
+### High
+
+Memory-resident payloads may:
+
+* Evade traditional antivirus solutions
+* Leave minimal filesystem traces
+* Remain active until application restart
+
+---
+
+# 🔍 Detection Opportunities
+
+## Process Monitoring
+
+Monitor for:
+
+* Unexpected process creation
+* Runtime command execution
+* Abnormal JVM behavior
+
+### Key Indicators
+
+```java
 Runtime.exec()
 ProcessBuilder
-Unexpected child processes
-JVM Monitoring
+```
+
+---
+
+## JVM Monitoring
 
 Look for:
 
-Unknown Java Agents
-Suspicious ClassLoaders
-Dynamically loaded classes
-Modified runtime behavior
-Memory Analysis
+* Unknown Java Agents
+* Suspicious ClassLoaders
+* Dynamically loaded classes
+* Runtime modifications
+
+---
+
+## Memory Analysis
 
 Inspect:
 
-Loaded classes
-Active threads
-Registered filters
-Registered valves
-Useful Tools
-JCMD
-JMAP
-VisualVM
-Eclipse MAT
-Network Monitoring
+* Loaded classes
+* Active threads
+* Registered filters
+* Registered listeners
+* Registered valves
 
-Detect:
+### Useful Tools
 
-Unusual outbound traffic
-Suspicious callbacks
-Unknown HTTP endpoints
-🛡️ Mitigation Strategies
-Patch Vulnerabilities
+* JCMD
+* JMAP
+* VisualVM
+* Eclipse MAT
 
-Keep applications updated:
+---
 
-Product	Vulnerability
-Bitbucket	CVE-2022-36804
-Jenkins	Multiple RCEs
-Confluence	CVE-2023-22527
-Disable Unnecessary Features
-Script Consoles
-Debug Interfaces
-Unused Admin Endpoints
-Restrict JVM Attach API
+## Network Monitoring
 
-Example:
+Identify:
 
+* Suspicious outbound traffic
+* Unexpected callbacks
+* Unknown HTTP endpoints
+
+---
+
+# 🛡️ Mitigation Strategies
+
+## Patch Vulnerabilities
+
+| Product    | Vulnerability                |
+| ---------- | ---------------------------- |
+| Bitbucket  | CVE-2022-36804               |
+| Jenkins    | Multiple RCE Vulnerabilities |
+| Confluence | CVE-2023-22527               |
+
+---
+
+## Restrict Attach API
+
+Disable unnecessary Attach API functionality:
+
+```bash
 -XX:+DisableAttachMechanism
-Runtime Monitoring
+```
 
-Deploy:
+---
 
-EDR Solutions
-JVM Monitoring Tools
-Threat Hunting Workflows
-Principle of Least Privilege
+## Disable Unnecessary Features
+
+* Debug interfaces
+* Script consoles
+* Unused management endpoints
+
+---
+
+## Principle of Least Privilege
 
 Applications should:
 
-Run as non-root users
-Restrict filesystem access
-Limit outbound network access
+* Run as non-root users
+* Restrict filesystem permissions
+* Limit outbound network access
 
-References
+---
 
-Research Article
-Synacktiv — Injecting Java In-Memory Payloads for Post-Exploitation
-Related CVEs
-CVE-2022-36804
-CVE-2023-22527
-CVE-2017-1000353
+## Runtime Security Monitoring
+
+Deploy:
+
+* EDR Solutions
+* JVM Monitoring Tools
+* Threat Detection Rules
+* Threat Hunting Workflows
+
+---
+
+# 📚 References
+
+## Research
+
+* Synacktiv — Injecting Java In-Memory Payloads for Post-Exploitation
+
+## Related CVEs
+
+* CVE-2022-36804
+* CVE-2023-22527
+* CVE-2017-1000353
+* CVE-2018-1000861
+* CVE-2019-1003005
+* CVE-2019-1003029
+
+## Documentation
+
+* Oracle JVM Documentation
+* Java Instrumentation API Documentation
+* Spring Framework Documentation
+* Apache Tomcat Documentation
+* Jenkins Security Advisories
+* Atlassian Security Advisories
+
+```
+
+---
+
+# ⚠️ Disclaimer
+
+This repository is intended for:
+
+* Security Research
+* Defensive Security Training
+* Threat Hunting Education
+* Incident Response Learning
+
+All activities should be conducted only in authorized environments and for educational purposes.
