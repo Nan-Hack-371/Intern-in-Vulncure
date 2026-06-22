@@ -2,7 +2,7 @@
 
 ## Overview
 
-Week 3 focused on advancing vulnerability research, bug bounty methodology, CVE analysis, and practical web application security testing. The objective was to strengthen understanding of real-world security issues while continuing the study of selected vulnerability categories from the OWASP Top 10 and bug bounty programs.
+Week 4 focused on advancing vulnerability research, bug bounty methodology, CVE analysis, and practical web application security testing. The objective was to strengthen understanding of real-world security issues while continuing the study of selected vulnerability categories from the OWASP Top 10 and bug bounty programs.
 
 ---
 
